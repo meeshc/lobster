@@ -47,6 +47,7 @@ export class Fetch extends React.Component {
 
   constructor(props) {
     super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
     // this.componentWillReceiveProps = this.componentWillReceiveProps(this);
     const locationSearch = props.location.search;
     const parsed = queryString.parse(locationSearch === '' ? props.location.hash : locationSearch);
@@ -190,7 +191,7 @@ export class Fetch extends React.Component {
     window.history.replaceState({}, '', window.location.pathname + '#' + queryString.stringify(parsed));
   }
 
-  handleSubmit = (event) => {
+  handleSubmit(event) {
     console.log('handleSubmit');
     event.preventDefault();
     // prepare do to the change
@@ -315,7 +316,7 @@ export class Fetch extends React.Component {
     this.setState({find: '', findIdx: -1, findResults: []});
   }
 
-  shouldPrintLine = (bookmarks, line, filter, inverseFilter) => {
+  shouldPrintLine(bookmarks, line, filter, inverseFilter) {
     if (this.findBookmark(bookmarks, line.lineNumber) !== -1) {
       return true;
     }
@@ -520,7 +521,7 @@ export class Fetch extends React.Component {
         find={this.state.find}
         highlightText={highlightText}
         findLine={this.state.findIdx === -1 ? -1 : this.state.findResults[this.state.findIdx]}
-        shouldPrintLine={this.shouldPrintLine}
+        shouldPrintLine={this.shouldPrintLine.bind(this)}
         shouldHighlightLine={this.shouldHighlightLine}
       />);
   }

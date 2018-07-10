@@ -42,8 +42,7 @@ module.exports = {
       },
       'rules': {
         'no-debugger': ENABLE_NO_DEBUGGER,
-        'react/jsx-key': 0,
-        'react/jsx-no-bind': 0
+        'react/jsx-key': 0
       }
     },
     {
@@ -86,7 +85,6 @@ module.exports = {
     'react/jsx-closing-bracket-location': 2,
     'react/jsx-closing-tag-location': 2,
     'react/jsx-equals-spacing': 2,
-    'react/jsx-no-bind': 2,
     'react/jsx-tag-spacing': 2,
     'react/jsx-wrap-multilines': 2,
     'react/prefer-stateless-function': [2, {'ignorePureComponents': true}],
@@ -95,6 +93,7 @@ module.exports = {
     'react/no-this-in-sfc': 2,
 
     // work towards making these errors
+    'react/jsx-no-bind': 1,
     'react/no-access-state-in-setstate': 1,
     'react/require-optimization': 1,
 

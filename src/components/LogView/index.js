@@ -231,7 +231,7 @@ class LogView extends React.Component {
         this.state.lineMap[line] = element;
       }
     };
-    this.filteredLines = [];
+    // this.filteredLines = [];
     this.highlightLines = [];
   }
 
@@ -265,25 +265,35 @@ class LogView extends React.Component {
     this.setState({clicks: []});
   }
 
-  genList = (index, key) => {
-    return (
-      <FullLogLine
-        lineRefCallback={this.lineRefCallback}
-        key={key}
-        found={this.filteredLines[index].lineNumber === this.props.findLine}
-        bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
-        highlight={this.highlightLines.includes(this.filteredLines[index])}
-        wrap={this.props.wrap}
-        line={this.filteredLines[index]}
-        toggleBookmark={this.props.toggleBookmark}
-        colorMap={this.props.colorMap}
-        find={this.props.find}
-        highlightText={this.props.highlightText}
-        caseSensitive={this.props.caseSensitive}
-        updateSelectStartIndex={this.updateSelectStartIndex}
-        updateSelectEndIndex={this.updateSelectEndIndex}
+  genList(filteredLines) {
+    const list = (
+      <ReactList
+        ref={this.setLogListRef}
+        itemRenderer={(index, key) => (
+          <FullLogLine
+            lineRefCallback={this.lineRefCallback}
+            key={key}
+            found={filteredLines[index].lineNumber === this.props.findLine}
+            bookmarked={this.props.findBookmark(this.props.bookmarks, filteredLines[index].lineNumber) !== -1}
+            highlight={this.highlightLines.includes(filteredLines[index])}
+            wrap={this.props.wrap}
+            line={filteredLines[index]}
+            toggleBookmark={this.props.toggleBookmark}
+            colorMap={this.props.colorMap}
+            find={this.props.find}
+            highlightText={this.props.highlightText}
+            caseSensitive={this.props.caseSensitive}
+            updateSelectStartIndex={this.updateSelectStartIndex}
+            updateSelectEndIndex={this.updateSelectEndIndex}
+          />
+        )}
+        length={filteredLines.length}
+        initialIndex={this.props.scrollLine}
+        type={this.props.wrap ? 'variable' : 'uniform'}
+        useStaticSize={true}
       />
     );
+    return list;
   }
 
   scrollToLine(lineNumber) {
@@ -373,7 +383,9 @@ class LogView extends React.Component {
     let j = 0;
     this.indexMap = {};
     this.highlightLines = [];
-    this.filteredLines = this.props.lines.filter((line, i) => {
+    let processed = [];
+    const lines = this.props.lines;
+    processed = lines.filter((line, i) => {
       if (!this.props.shouldPrintLine(this.props.bookmarks, line, this.props.filter, this.props.inverseFilter)) {
         return false;
       }
@@ -384,17 +396,11 @@ class LogView extends React.Component {
       }
       return true;
     });
-    if (this.filteredLines.length !== 0) {
+    const output = this.genList(processed);
+    if (output.length !== 0) {
       return (
-        <div onDoubleClick={this.handleDoubleClick}>
-          <ReactList
-            ref={this.setLogListRef}
-            itemRenderer={this.genList}
-            length={this.filteredLines.length}
-            initialIndex={this.props.scrollLine}
-            type={this.props.wrap ? 'variable' : 'uniform'}
-            useStaticSize={true}
-          />
+        <div>
+          {output}
         </div>
       );
     }
