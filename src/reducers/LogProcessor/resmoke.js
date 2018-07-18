@@ -1,7 +1,6 @@
 // @flow strict
 
-import type { Action, Log } from '../actions';
-import { LOGKEEPER_LOAD_RESPONSE } from '../actions';
+import type { Log } from '../../models';
 
 function getGitVersion(line: string): string {
   const gitVersionStr = 'git version: ';
@@ -20,7 +19,7 @@ function getFullGitRef(fileLine: ?string, gitVersion: string): ?string {
   return gitPrefix + gitVersion + '/' + fileLine;
 }
 
-function processServerResponse(response: string): Log {
+export default function(response: string): Log {
   // set the url to the url we requested
   const lines = response.split('\n');
 
@@ -94,23 +93,7 @@ function processServerResponse(response: string): Log {
 
   return {
     lines: processed,
-    colorMap: colorMap
+    colorMap: colorMap,
+    isDone: true
   };
-}
-
-const initialState: Log = {
-  lines: [],
-  colorMap: new Map()
-};
-
-export function logkeeperDataResponse(state: Log = initialState, action: Action): Log {
-  if (action.type !== LOGKEEPER_LOAD_RESPONSE) {
-    return state;
-  }
-
-  if (!action.error) {
-    return processServerResponse(action.payload.data);
-  }
-
-  return state;
 }

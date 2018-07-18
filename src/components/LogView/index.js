@@ -2,6 +2,7 @@ import React from 'react';
 import ReactList from 'react-list';
 import Highlighter from 'react-highlight-words';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 
 import './style.css';
 
@@ -30,7 +31,7 @@ class LogLineText extends React.Component {
     };
   }
 
-  componentDidMount() {
+  componentDidUpdate() {
     if (this.lineRef) {
       this.props.lineRefCallback(this.lineRef, this.props.lineNumber);
     }
@@ -49,13 +50,13 @@ class LogLineText extends React.Component {
   }
 
   render() {
-    const style = {color: this.props.colorMap[this.props.port]};
+    const style = { color: this.props.colorMap[this.props.port] };
     const highlightAndFind = this.updateHighlightAndFind();
-    const highlightStyle = {color: this.props.colorMap[this.props.port], 'backgroundImage': 'inherit', 'backgroundColor': 'pink'};
+    const highlightStyle = { color: this.props.colorMap[this.props.port], 'backgroundImage': 'inherit', 'backgroundColor': 'pink' };
     return (
       <span ref={this.setRef}>
         <Highlighter
-          highlightClassName={'findResult and highlight' + this.props.lineNumber}
+          highlightClassName={'findResult' + this.props.lineNumber}
           caseSensitive={this.props.caseSensitive}
           unhighlightStyle={style}
           highlightStyle={highlightStyle}
@@ -70,7 +71,8 @@ class LogLineText extends React.Component {
 class LineNumber extends React.Component {
   static propTypes = {
     toggleBookmark: PropTypes.func,
-    lineNumber: PropTypes.number
+    lineNumber: PropTypes.number,
+    handleDoubleClick: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -79,8 +81,8 @@ class LineNumber extends React.Component {
   }
 
   render() {
-    const style = {width: '60px', display: 'inline-block'};
-    return <span data-pseudo-content={this.props.lineNumber} className="padded-text" style={style}></span>;
+    const style = { width: '60px', display: 'inline-block' };
+    return <span data-pseudo-content={this.props.lineNumber} className="padded-text" style={style} onDoubleClick={this.props.handleDoubleClick}></span>;
   }
 }
 
@@ -101,7 +103,7 @@ class LogOptions extends React.Component {
   }
 
   render() {
-    const style = {width: '30px', display: 'inline-block'};
+    const style = { width: '30px', display: 'inline-block' };
     if (this.props.gitRef) {
       return <span style={style} data-pseudo-content="&nbsp;&#128279;&nbsp;" onClick={this.handleClick}></span>;
     }
@@ -128,7 +130,8 @@ class FullLogLine extends React.Component {
     wrap: PropTypes.bool,
     updateSelectStartIndex: PropTypes.func,
     updateSelectEndIndex: PropTypes.func,
-    highlightText: PropTypes.array.isRequired
+    highlightText: PropTypes.array.isRequired,
+    handleDoubleClick: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -172,8 +175,8 @@ class FullLogLine extends React.Component {
       className += ' filtered';
     }
     return (
-      <div className={className} onMouseUp={this.handleMouseUp} onMouseDown={this.handleMouseDown}>
-        <LineNumber lineNumber={this.props.line.lineNumber} toggleBookmark={this.props.toggleBookmark} />
+      <div className={className} onMouseUp={this.handleMouseUp} onMouseDown={this.handleMouseDown} >
+        <LineNumber lineNumber={this.props.line.lineNumber} toggleBookmark={this.props.toggleBookmark} handleDoubleClick={this.props.handleDoubleClick} />
         <LogOptions gitRef={this.props.line.gitRef} />
         <LogLineText
           lineRefCallback={this.props.lineRefCallback}
@@ -217,7 +220,8 @@ class LogView extends React.Component {
       lineMap: new Map(),
       selectStartIndex: null,
       selectEndIndex: null,
-      clicks: []
+      clicks: [],
+      scrollLine: null
     };
     this.logListRef = null;
     this.indexMap = {};
@@ -229,6 +233,9 @@ class LogView extends React.Component {
         this.state.lineMap.delete(line);
       } else {
         this.state.lineMap[line] = element;
+        if (this.state.scrollLine && line === this.state.scrollLine) {
+          this.scrollFindIntoView();
+        }
       }
     };
     // this.filteredLines = [];
@@ -236,64 +243,57 @@ class LogView extends React.Component {
   }
 
   updateSelectStartIndex = (index) => {
-    this.setState({selectStartIndex: index});
+    this.setState({ selectStartIndex: index });
   }
 
   updateSelectEndIndex = (index) => {
-    this.setState({selectEndIndex: index});
+    this.setState({ selectEndIndex: index });
     const newClicks = this.state.clicks.slice();
     const clickElem = [this.state.selectStartIndex, index];
     newClicks.push(clickElem);
-    this.setState({clicks: newClicks});
+    this.setState({ clicks: newClicks });
   }
 
   handleDoubleClick = () => {
     let indexArray = [];
     const lastClick = this.state.clicks[this.state.clicks.length - 1];
     const secondToLastClick = this.state.clicks[this.state.clicks.length - 2];
-    // Check if trying to toggle one line
-    if (lastClick[0] === secondToLastClick[0] && lastClick[1] === secondToLastClick[1]) {
-      indexArray.push(lastClick[0]);
-    } if (this.state.clicks.length > 2) {
-      const selectClick = this.state.clicks[this.state.clicks.length - 3];
-      if (lastClick[0] >= selectClick[0] && lastClick[1] <= selectClick[1]) {
-        indexArray = Array(selectClick[1] - selectClick[0] + 1).fill().map((item, index) => selectClick[0] + index);
+    if (lastClick && secondToLastClick) {
+      // Check if trying to toggle one line
+      if (lastClick[0] === secondToLastClick[0] && lastClick[1] === secondToLastClick[1]) {
+        indexArray.push(lastClick[0]);
+      } if (this.state.clicks.length > 2) {
+        const selectClick = this.state.clicks[this.state.clicks.length - 3];
+        if (lastClick[0] >= selectClick[0] && lastClick[1] <= selectClick[1]) {
+          indexArray = Array(selectClick[1] - selectClick[0] + 1).fill().map((item, index) => selectClick[0] + index);
+        }
       }
+      // Call toggle bookmark
+      this.props.toggleBookmark(indexArray);
+      this.setState({ clicks: [] });
     }
-    // Call toggle bookmark
-    this.props.toggleBookmark(indexArray);
-    this.setState({clicks: []});
   }
 
-  genList(filteredLines) {
-    const list = (
-      <ReactList
-        ref={this.setLogListRef}
-        itemRenderer={(index, key) => (
-          <FullLogLine
-            lineRefCallback={this.lineRefCallback}
-            key={key}
-            found={filteredLines[index].lineNumber === this.props.findLine}
-            bookmarked={this.props.findBookmark(this.props.bookmarks, filteredLines[index].lineNumber) !== -1}
-            highlight={this.highlightLines.includes(filteredLines[index])}
-            wrap={this.props.wrap}
-            line={filteredLines[index]}
-            toggleBookmark={this.props.toggleBookmark}
-            colorMap={this.props.colorMap}
-            find={this.props.find}
-            highlightText={this.props.highlightText}
-            caseSensitive={this.props.caseSensitive}
-            updateSelectStartIndex={this.updateSelectStartIndex}
-            updateSelectEndIndex={this.updateSelectEndIndex}
-          />
-        )}
-        length={filteredLines.length}
-        initialIndex={this.props.scrollLine}
-        type={this.props.wrap ? 'variable' : 'uniform'}
-        useStaticSize={true}
+  genList = (index, key) => {
+    return (
+      <FullLogLine
+        lineRefCallback={this.lineRefCallback}
+        key={key}
+        found={this.filteredLines[index].lineNumber === this.props.findLine}
+        bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
+        highlight={this.highlightLines.includes(this.filteredLines[index])}
+        wrap={this.props.wrap}
+        line={this.filteredLines[index]}
+        toggleBookmark={this.props.toggleBookmark}
+        colorMap={this.props.colorMap}
+        find={this.props.find}
+        highlightText={this.props.highlightText}
+        caseSensitive={this.props.caseSensitive}
+        updateSelectStartIndex={this.updateSelectStartIndex}
+        updateSelectEndIndex={this.updateSelectEndIndex}
+        handleDoubleClick={this.handleDoubleClick}
       />
     );
-    return list;
   }
 
   scrollToLine(lineNumber) {
@@ -348,8 +348,12 @@ class LogView extends React.Component {
 
   scrollFindIntoView() {
     if (this.props.findLine < 0 || !(this.props.findLine in this.state.lineMap)) {
+      if (this.props.findLine >= 0) {
+        this.setState({ scrollLine: this.props.findLine });
+      }
       return;
     }
+    // console.log(this.props.findLine);
     const findElements = this.state.lineMap[this.props.findLine]
       .getElementsByClassName('findResult' + this.props.findLine);
     if (findElements.length > 0) {
@@ -358,8 +362,7 @@ class LogView extends React.Component {
       const windowWidth = window.innerWidth;
 
       let scrollX = window.scrollX;
-      const scrollY = window.scrollY - 45; // Account for header
-
+      const scrollY = window.scrollY; // Account for header
       if (position.right > windowWidth) {
         // Scroll so the leftmost part of the component is 2/3 of the way into the screen.
         scrollX = position.left - windowWidth / 3;
@@ -400,11 +403,34 @@ class LogView extends React.Component {
     if (output.length !== 0) {
       return (
         <div>
-          {output}
+          <ReactList
+            ref={this.setLogListRef}
+            itemRenderer={this.genList}
+            length={this.filteredLines.length}
+            initialIndex={this.props.scrollLine}
+            type={this.props.wrap ? 'variable' : 'uniform'}
+            useStaticSize={true}
+          />
         </div>
       );
     }
     return (<div></div>);
   }
 }
-export default LogView;
+
+function mapStateToProps(state, ownProps) {
+  return { ...state, ...ownProps,
+    colorMap: state.log.colorMap, lines: state.log.lines,
+    caseSensitive: state.settings.caseSensitive,
+    wrap: state.settings.wrap,
+    find: state.find.searchRegex
+  };
+}
+
+function mapDispatchToProps(dispatch, ownProps) {
+  return {
+    ...ownProps
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(LogView);

@@ -11,12 +11,11 @@
 }
 .bookmarks-bar {
     width: 60px;
-    height: calc(100vh - 45px);
+    height: 100vh;
     background-color: #DDDDDD;
     position: fixed;
     float: left;
     padding-left:5px;
-    margin-top: 45px;
     z-index: 100;
     overflow: auto;
     box-shadow: 0 4px 8px -4px rgba(0, 0, 0, 0.2), 0 6px 20px -4px rgba(0, 0, 0, 0.19);
@@ -28,7 +27,6 @@
 }
 
 .log-list {
-    padding-top: 45px;
 }
 
 .main {
@@ -47,7 +45,7 @@
 
 }
 
-.filter-highlight-buttons {
+.toggle-buttons {
     margin-left: 12px;
 }
 
@@ -58,6 +56,11 @@
 .exit-button {
     width: 22px;
     margin-left: 10px;
+}
+
+.far-left-label {
+  margin-left: 25px;
+  font-size: 13px;
 }
 
 .filter-button-medium {
@@ -80,7 +83,7 @@
     font-size: 17px;
 }
 
-.filter-highlight-label {
+.toggle-label {
   margin-left: 10px;
   font-size: 13px;
 }
