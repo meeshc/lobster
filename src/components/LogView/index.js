@@ -294,7 +294,6 @@ class LogView extends React.Component {
         handleDoubleClick={this.handleDoubleClick}
       />
     );
-    return list;
   }
 
   scrollToLine(lineNumber) {
