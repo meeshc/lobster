@@ -400,6 +400,7 @@ export class Fetch extends React.Component {
         findLine={this.props.findIdx === -1 ? -1 : this.state.findResults[this.props.findIdx]}
         shouldPrintLine={this.shouldPrintLine}
         shouldHighlightLine={this.shouldHighlightLine}
+        addLineNumber={this.props.addLineNumber}
       />);
   }
 

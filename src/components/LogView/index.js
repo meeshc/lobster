@@ -72,17 +72,38 @@ class LineNumber extends React.Component {
   static propTypes = {
     toggleBookmark: PropTypes.func,
     lineNumber: PropTypes.number,
-    handleDoubleClick: PropTypes.func.isRequired
+    handleDoubleClick: PropTypes.func.isRequired,
+    addLineNumber: PropTypes.func,
+    bookmarked: PropTypes.bool,
+    wrap: PropTypes.bool,
+    found: PropTypes.bool,
+    highlight: PropTypes.bool
   };
 
   constructor(props) {
     super(props);
     this.state = {};
+    // this.props.addLineNumber(this.props.lineNumber);
   }
 
   render() {
+    let className = 'monospace hover-highlight inline';
+    if (this.props.bookmarked) {
+      className += ' bookmark-line';
+    }
+    if (!this.props.wrap) {
+      className += ' no-wrap';
+    } else {
+      className += ' wrap';
+    }
+    if (this.props.found) {
+      className += ' highlighted';
+    }
+    if (this.props.highlight) {
+      className += ' filtered';
+    }
     const style = { width: '60px', display: 'inline-block' };
-    return <span data-pseudo-content={this.props.lineNumber} className="padded-text" style={style} onDoubleClick={this.props.handleDoubleClick}></span>;
+    return <span data-pseudo-content={this.props.lineNumber} className={className + ' padded-text'} style={style} onDoubleClick={this.props.handleDoubleClick}></span>;
   }
 }
 
@@ -131,7 +152,8 @@ class FullLogLine extends React.Component {
     updateSelectStartIndex: PropTypes.func,
     updateSelectEndIndex: PropTypes.func,
     highlightText: PropTypes.array.isRequired,
-    handleDoubleClick: PropTypes.func.isRequired
+    handleDoubleClick: PropTypes.func.isRequired,
+    addLineNumber: PropTypes.func
   };
 
   constructor(props) {
@@ -176,7 +198,6 @@ class FullLogLine extends React.Component {
     }
     return (
       <div className={className} onMouseUp={this.handleMouseUp} onMouseDown={this.handleMouseDown} >
-        <LineNumber lineNumber={this.props.line.lineNumber} toggleBookmark={this.props.toggleBookmark} handleDoubleClick={this.props.handleDoubleClick} />
         <LogOptions gitRef={this.props.line.gitRef} />
         <LogLineText
           lineRefCallback={this.props.lineRefCallback}
@@ -211,7 +232,8 @@ class LogView extends React.Component {
     highlightText: PropTypes.array,
     highlightLine: PropTypes.array.isRequired,
     shouldPrintLine: PropTypes.func.isRequired,
-    shouldHighlightLine: PropTypes.func.isRequired
+    shouldHighlightLine: PropTypes.func.isRequired,
+    addLineNumber: PropTypes.func
   };
   constructor(props) {
     super(props);
@@ -224,9 +246,13 @@ class LogView extends React.Component {
       scrollLine: null
     };
     this.logListRef = null;
+    this.lineNumberListRef = null;
     this.indexMap = {};
     this.setLogListRef = element => {
       this.logListRef = element;
+    };
+    this.setLineNumberListRef = element => {
+      this.lineNumberListRef = element;
     };
     this.lineRefCallback = (element, line, isUnmount) => {
       if (isUnmount === true) {
@@ -276,23 +302,40 @@ class LogView extends React.Component {
 
   genList = (index, key) => {
     return (
-      <FullLogLine
-        lineRefCallback={this.lineRefCallback}
-        key={key}
-        found={this.filteredLines[index].lineNumber === this.props.findLine}
-        bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
-        highlight={this.highlightLines.includes(this.filteredLines[index])}
-        wrap={this.props.wrap}
-        line={this.filteredLines[index]}
-        toggleBookmark={this.props.toggleBookmark}
-        colorMap={this.props.colorMap}
-        find={this.props.find}
-        highlightText={this.props.highlightText}
-        caseSensitive={this.props.caseSensitive}
-        updateSelectStartIndex={this.updateSelectStartIndex}
-        updateSelectEndIndex={this.updateSelectEndIndex}
-        handleDoubleClick={this.handleDoubleClick}
-      />
+      <div key={key}>
+        <span style={{ position: 'sticky', float: 'left', left: '70px', width: '60px', backgroundColor: 'yellow' }}>
+          <LineNumber
+            key={key}
+            wrap={this.props.wrap}
+            bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
+            highlight={this.highlightLines.includes(this.filteredLines[index])}
+            found={this.filteredLines[index].lineNumber === this.props.findLine}
+            toggleBookmark={this.props.toggleBookmark}
+            lineNumber={this.filteredLines[index].lineNumber}
+            handleDoubleClick={this.handleDoubleClick}
+          />
+        </span>
+        <span style={{ overflow: 'scroll' }}>
+          <FullLogLine
+            lineRefCallback={this.lineRefCallback}
+            key={key}
+            found={this.filteredLines[index].lineNumber === this.props.findLine}
+            bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
+            highlight={this.highlightLines.includes(this.filteredLines[index])}
+            wrap={this.props.wrap}
+            line={this.filteredLines[index]}
+            toggleBookmark={this.props.toggleBookmark}
+            colorMap={this.props.colorMap}
+            find={this.props.find}
+            highlightText={this.props.highlightText}
+            caseSensitive={this.props.caseSensitive}
+            updateSelectStartIndex={this.updateSelectStartIndex}
+            updateSelectEndIndex={this.updateSelectEndIndex}
+            handleDoubleClick={this.handleDoubleClick}
+            addLineNumber={this.props.addLineNumber}
+          />
+        </span>
+      </div>
     );
   }
 
