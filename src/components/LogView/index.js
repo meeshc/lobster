@@ -301,9 +301,10 @@ class LogView extends React.Component {
   }
 
   genList = (index, key) => {
+    console.log(this.filteredLines[index].lineNumber);
     return (
       <div key={key}>
-        <span style={{ position: 'sticky', float: 'left', left: '70px', width: '60px', backgroundColor: 'yellow' }}>
+        <div style={{ position: 'sticky', float: 'left', left: '70px', width: '60px', backgroundColor: 'yellow' }}>
           <LineNumber
             key={key}
             wrap={this.props.wrap}
@@ -314,8 +315,8 @@ class LogView extends React.Component {
             lineNumber={this.filteredLines[index].lineNumber}
             handleDoubleClick={this.handleDoubleClick}
           />
-        </span>
-        <span style={{ overflow: 'scroll' }}>
+        </div>
+        <div style={{ overflow: 'scroll' }}>
           <FullLogLine
             lineRefCallback={this.lineRefCallback}
             key={key}
@@ -334,7 +335,7 @@ class LogView extends React.Component {
             handleDoubleClick={this.handleDoubleClick}
             addLineNumber={this.props.addLineNumber}
           />
-        </span>
+        </div>
       </div>
     );
   }
