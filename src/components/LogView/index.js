@@ -103,7 +103,7 @@ class LineNumber extends React.Component {
       className += ' filtered';
     }
     const style = { width: '60px', display: 'inline-block' };
-    return <span data-pseudo-content={this.props.lineNumber} className={className + ' padded-text'} style={style} onDoubleClick={this.props.handleDoubleClick}></span>;
+    return <div data-pseudo-content={this.props.lineNumber} className={className + ' padded-text'} style={style} onDoubleClick={this.props.handleDoubleClick}></div>;
   }
 }
 
@@ -300,43 +300,41 @@ class LogView extends React.Component {
     }
   }
 
-  genList = (index, key) => {
-    console.log(this.filteredLines[index].lineNumber);
+  genNumberList = (index, key) => {
     return (
-      <div key={key}>
-        <div style={{ position: 'sticky', float: 'left', left: '70px', width: '60px', backgroundColor: 'yellow' }}>
-          <LineNumber
-            key={key}
-            wrap={this.props.wrap}
-            bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
-            highlight={this.highlightLines.includes(this.filteredLines[index])}
-            found={this.filteredLines[index].lineNumber === this.props.findLine}
-            toggleBookmark={this.props.toggleBookmark}
-            lineNumber={this.filteredLines[index].lineNumber}
-            handleDoubleClick={this.handleDoubleClick}
-          />
-        </div>
-        <div style={{ overflow: 'scroll' }}>
-          <FullLogLine
-            lineRefCallback={this.lineRefCallback}
-            key={key}
-            found={this.filteredLines[index].lineNumber === this.props.findLine}
-            bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
-            highlight={this.highlightLines.includes(this.filteredLines[index])}
-            wrap={this.props.wrap}
-            line={this.filteredLines[index]}
-            toggleBookmark={this.props.toggleBookmark}
-            colorMap={this.props.colorMap}
-            find={this.props.find}
-            highlightText={this.props.highlightText}
-            caseSensitive={this.props.caseSensitive}
-            updateSelectStartIndex={this.updateSelectStartIndex}
-            updateSelectEndIndex={this.updateSelectEndIndex}
-            handleDoubleClick={this.handleDoubleClick}
-            addLineNumber={this.props.addLineNumber}
-          />
-        </div>
-      </div>
+      <LineNumber
+        key={key}
+        wrap={this.props.wrap}
+        bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
+        highlight={this.highlightLines.includes(this.filteredLines[index])}
+        found={this.filteredLines[index].lineNumber === this.props.findLine}
+        toggleBookmark={this.props.toggleBookmark}
+        lineNumber={this.filteredLines[index].lineNumber}
+        handleDoubleClick={this.handleDoubleClick}
+      />
+    );
+  }
+
+  genList = (index, key) => {
+    return (
+      <FullLogLine
+        lineRefCallback={this.lineRefCallback}
+        key={key}
+        found={this.filteredLines[index].lineNumber === this.props.findLine}
+        bookmarked={this.props.findBookmark(this.props.bookmarks, this.filteredLines[index].lineNumber) !== -1}
+        highlight={this.highlightLines.includes(this.filteredLines[index])}
+        wrap={this.props.wrap}
+        line={this.filteredLines[index]}
+        toggleBookmark={this.props.toggleBookmark}
+        colorMap={this.props.colorMap}
+        find={this.props.find}
+        highlightText={this.props.highlightText}
+        caseSensitive={this.props.caseSensitive}
+        updateSelectStartIndex={this.updateSelectStartIndex}
+        updateSelectEndIndex={this.updateSelectEndIndex}
+        handleDoubleClick={this.handleDoubleClick}
+        addLineNumber={this.props.addLineNumber}
+      />
     );
   }
 
@@ -444,14 +442,26 @@ class LogView extends React.Component {
     if (this.filteredLines.length !== 0) {
       return (
         <div>
-          <ReactList
-            ref={this.setLogListRef}
-            itemRenderer={this.genList}
-            length={this.filteredLines.length}
-            initialIndex={this.props.scrollLine}
-            type={this.props.wrap ? 'variable' : 'uniform'}
-            useStaticSize={true}
-          />
+          <div style={{ display: 'inline', position: 'fixed', left: '70px', width: '60px', backgroundColor: 'yellow', overflow: 'auto', zIndex: '50' }}>
+            <ReactList
+              ref={this.setLineNumberListRef}
+              itemRenderer={this.genNumberList}
+              length={this.filteredLines.length}
+              initialIndex={this.props.scrollLine}
+              type={this.props.wrap ? 'variable' : 'uniform'}
+              useStaticSize={true}
+            />
+          </div>
+          <div style={{ display: 'inline' }}>
+            <ReactList
+              ref={this.setLogListRef}
+              itemRenderer={this.genList}
+              length={this.filteredLines.length}
+              initialIndex={this.props.scrollLine}
+              type={this.props.wrap ? 'variable' : 'uniform'}
+              useStaticSize={true}
+            />
+          </div>
         </div>
       );
     }
